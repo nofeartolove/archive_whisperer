@@ -12,10 +12,10 @@ from google.genai import types
 # Load env variables (automatically walks up to find .env in project root)
 dotenv.load_dotenv()
 
-# Define the transcriber agent using gemini-2.5-flash (due to 2.0-flash quota limitations on free tier)
+# Define the transcriber agent using gemini-3.5-flash
 transcriber = LlmAgent(
     name="transcriber_agent",
-    model="gemini-2.5-flash",
+    model="gemini-3.5-flash",
     instruction="""
     You are an expert paleographer specializing in 19th-century American handwriting.
     Transcribe the handwritten text in the provided image exactly as written.
