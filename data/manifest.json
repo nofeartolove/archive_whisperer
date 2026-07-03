@@ -1,0 +1,90 @@
+[
+  {
+    "filename": "lincoln_mal1723200.jpg",
+    "collection": "Abraham Lincoln Papers",
+    "item_id": "mal1723200",
+    "description": "Preliminary Draft of the Emancipation Proclamation, July 22, 1862",
+    "source_url": "https://www.loc.gov/item/mal1723200/",
+    "image_url": "https://tile.loc.gov/image-services/iiif/service:mss:mal:172:1723200:001/full/pct:100/0/default.jpg#h=7378&w=10356"
+  },
+  {
+    "filename": "lincoln_mal0773800.jpg",
+    "collection": "Abraham Lincoln Papers",
+    "item_id": "mal0773800",
+    "description": "First Inaugural Address, Final Version, March 1861",
+    "source_url": "https://www.loc.gov/item/mal0773800/",
+    "image_url": "https://tile.loc.gov/image-services/iiif/service:mss:mal:077:0773800:001/full/pct:100/0/default.jpg#h=8424&w=5575"
+  },
+  {
+    "filename": "lincoln_mal4233400.jpg",
+    "collection": "Abraham Lincoln Papers",
+    "item_id": "mal4233400",
+    "description": "Lincoln to Horace Greeley, August 22, 1862",
+    "source_url": "https://www.loc.gov/item/mal4233400/",
+    "image_url": "https://tile.loc.gov/image-services/iiif/service:mss:mal:423:4233400:001/full/pct:100/0/default.jpg#h=6040&w=2143"
+  },
+  {
+    "filename": "lincoln_mal0007400.jpg",
+    "collection": "Abraham Lincoln Papers",
+    "item_id": "mal0007400",
+    "description": "Lincoln to Congress re: Mexican War, January 12, 1848",
+    "source_url": "https://www.loc.gov/item/mal0007400/",
+    "image_url": "https://tile.loc.gov/image-services/iiif/service:mss:mal:000:0007400:001/full/pct:100/0/default.jpg#h=6193&w=4892"
+  },
+  {
+    "filename": "lincoln_mal1728600.jpg",
+    "collection": "Abraham Lincoln Papers",
+    "item_id": "mal1728600",
+    "description": "Lincoln to Cuthbert Bullitt, July 28, 1862",
+    "source_url": "https://www.loc.gov/item/mal1728600/",
+    "image_url": "https://tile.loc.gov/image-services/iiif/service:mss:mal:172:1728600:001/full/pct:100/0/default.jpg#h=7735&w=4773"
+  },
+  {
+    "filename": "lincoln_mal0843200.jpg",
+    "collection": "Abraham Lincoln Papers",
+    "item_id": "mal0843200",
+    "description": "Cassius M. Clay to Lincoln, March 28, 1861",
+    "source_url": "https://www.loc.gov/item/mal0843200/",
+    "image_url": "https://tile.loc.gov/image-services/iiif/service:mss:mal:084:0843200:001/full/pct:100/0/default.jpg#h=6464&w=5199"
+  },
+  {
+    "filename": "lincoln_mal1310600.jpg",
+    "collection": "Abraham Lincoln Papers",
+    "item_id": "mal1310600",
+    "description": "Nevada Territory Legislature Resolution, November 25, 1861",
+    "source_url": "https://www.loc.gov/item/mal1310600/",
+    "image_url": "https://tile.loc.gov/image-services/iiif/service:mss:mal:131:1310600:001/full/pct:100/0/default.jpg#h=7696&w=4750"
+  },
+  {
+    "filename": "lincoln_mal1284500.jpg",
+    "collection": "Abraham Lincoln Papers",
+    "item_id": "mal1284500",
+    "description": "British Newspaper Clippings, November 5, 1861",
+    "source_url": "https://www.loc.gov/item/mal1284500/",
+    "image_url": "https://tile.loc.gov/image-services/iiif/service:mss:mal:128:1284500:001/full/pct:100/0/default.jpg#h=6800&w=5310"
+  },
+  {
+    "filename": "gibson_page011.jpg",
+    "collection": "Samuel J. Gibson Diary and Correspondence",
+    "item_id": "mss5241.mss5241_01_001_089_sp11",
+    "description": "Gibson diary, page 11",
+    "source_url": "https://www.loc.gov/resource/mss5241.mss5241_01_001_089/?sp=11",
+    "image_url": "https://tile.loc.gov/image-services/iiif/service:mss:mss5241:01:011/full/pct:100/0/default.jpg"
+  },
+  {
+    "filename": "gibson_page037.jpg",
+    "collection": "Samuel J. Gibson Diary and Correspondence",
+    "item_id": "mss5241.mss5241_01_001_089_sp37",
+    "description": "Gibson diary, page 37",
+    "source_url": "https://www.loc.gov/resource/mss5241.mss5241_01_001_089/?sp=37",
+    "image_url": "https://tile.loc.gov/image-services/iiif/service:mss:mss5241:01:037/full/pct:100/0/default.jpg"
+  },
+  {
+    "filename": "gibson_page049.jpg",
+    "collection": "Samuel J. Gibson Diary and Correspondence",
+    "item_id": "mss5241.mss5241_01_001_089_sp49",
+    "description": "Gibson diary, page 49",
+    "source_url": "https://www.loc.gov/resource/mss5241.mss5241_01_001_089/?sp=49",
+    "image_url": "https://tile.loc.gov/image-services/iiif/service:mss:mss5241:01:049/full/pct:100/0/default.jpg"
+  }
+]

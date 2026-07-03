@@ -1,0 +1,5 @@
+google-adk
+google-generativeai
+requests
+Pillow
+python-dotenv
