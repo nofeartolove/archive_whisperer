@@ -47,7 +47,7 @@ formatter = LlmAgent(
     """,
 )
 
-def run_formatter(text: str, metadata: dict, retries: int = 3, delay: float = 65.0) -> str:
+def run_formatter(text: str, metadata: dict, retries: int = 3, delay: float = 10.0) -> str:
     """
     Runs the formatter agent to save the JSON transcription via MCP,
     and writes Markdown (.md) and plain text (.txt) versions directly to output/.
@@ -61,7 +61,12 @@ def run_formatter(text: str, metadata: dict, retries: int = 3, delay: float = 65
     except (ValueError, TypeError):
         page_num = 1
         
+    fallback_models = ["gemini-3.5-flash", "gemini-2.5-flash", "gemini-1.5-flash"]
+    
     for attempt in range(retries):
+        current_model = fallback_models[attempt % len(fallback_models)]
+        formatter.model = current_model
+        
         try:
             runner = InMemoryRunner(agent=formatter)
             session_id = f"format_session_{hash(item_id) & 0xffffffff}_{attempt}"
@@ -92,11 +97,11 @@ def run_formatter(text: str, metadata: dict, retries: int = 3, delay: float = 65
                             response_text += part.text
                             
             if not response_text:
-                raise ValueError("Formatter Agent returned empty response (possibly due to API 429 or connection failure).")
+                raise ValueError(f"Formatter Agent returned empty response using {current_model} (possibly due to API 429).")
                 
             break
         except Exception as e:
-            print(f"[Formatter] Attempt {attempt + 1} of {retries} failed: {e}")
+            print(f"[Formatter] Attempt {attempt + 1} of {retries} with {current_model} failed: {e}")
             if attempt < retries - 1:
                 print(f"[Formatter] Waiting {delay} seconds before retrying...")
                 time.sleep(delay)

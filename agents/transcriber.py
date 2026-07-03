@@ -24,8 +24,9 @@ transcriber = LlmAgent(
     """,
 )
 
-def transcribe_image_file(image_path: str | pathlib.Path) -> str:
-    """Helper function to run the transcriber agent on an image file."""
+def transcribe_image_file(image_path: str | pathlib.Path, retries: int = 3, delay: float = 10.0) -> str:
+    """Helper function to run the transcriber agent on an image file with fallback models on failure."""
+    import time
     path = pathlib.Path(image_path)
     if not path.exists():
         raise FileNotFoundError(f"Image not found at {path}")
@@ -41,26 +42,43 @@ def transcribe_image_file(image_path: str | pathlib.Path) -> str:
         ]
     )
     
-    # Initialize in-memory runner
-    runner = InMemoryRunner(agent=transcriber)
+    fallback_models = ["gemini-3.5-flash", "gemini-2.5-flash", "gemini-1.5-flash"]
     
-    # Create the session required by the runner
-    session_id = f"session_{path.stem}"
-    runner.session_service.create_session_sync(
-        app_name=runner.app_name,
-        user_id="default_user",
-        session_id=session_id
-    )
-    
-    # Run the agent and extract the response text
-    response_text = ""
-    for event in runner.run(user_id="default_user", session_id=session_id, new_message=message):
-        if event.content and event.content.parts:
-            for part in event.content.parts:
-                if part.text:
-                    response_text += part.text
-                    
-    return response_text
+    for attempt in range(retries):
+        current_model = fallback_models[attempt % len(fallback_models)]
+        transcriber.model = current_model
+        
+        try:
+            # Initialize in-memory runner
+            runner = InMemoryRunner(agent=transcriber)
+            
+            # Create a unique session ID per attempt
+            session_id = f"session_{path.stem}_{attempt}"
+            runner.session_service.create_session_sync(
+                app_name=runner.app_name,
+                user_id="default_user",
+                session_id=session_id
+            )
+            
+            # Run the agent and extract the response text
+            response_text = ""
+            for event in runner.run(user_id="default_user", session_id=session_id, new_message=message):
+                if event.content and event.content.parts:
+                    for part in event.content.parts:
+                        if part.text:
+                            response_text += part.text
+                            
+            if not response_text.strip():
+                raise ValueError("Transcriber Agent returned empty response (possibly due to API 429).")
+                
+            return response_text
+        except Exception as e:
+            print(f"[Transcriber] Attempt {attempt + 1} with {current_model} failed: {e}")
+            if attempt < retries - 1:
+                print(f"[Transcriber] Waiting {delay} seconds before retrying...")
+                time.sleep(delay)
+            else:
+                raise e
 
 if __name__ == "__main__":
     # Ensure output directory exists

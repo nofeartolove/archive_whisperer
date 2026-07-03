@@ -46,11 +46,16 @@ fetcher = LlmAgent(
     """,
 )
 
-def run_fetcher(url: str, retries: int = 3, delay: float = 65.0) -> dict:
+def run_fetcher(url: str, retries: int = 3, delay: float = 10.0) -> dict:
     """Runs the fetcher agent on the given URL, enforces security checks on the MIME type, and returns metadata."""
     import time
     
+    fallback_models = ["gemini-3.5-flash", "gemini-2.5-flash", "gemini-1.5-flash"]
+    
     for attempt in range(retries):
+        current_model = fallback_models[attempt % len(fallback_models)]
+        fetcher.model = current_model
+        
         try:
             runner = InMemoryRunner(agent=fetcher)
             # Create a unique session ID per attempt to avoid session state collisions
@@ -78,7 +83,7 @@ def run_fetcher(url: str, retries: int = 3, delay: float = 65.0) -> dict:
                             
             response_clean = response_text.strip()
             if not response_clean:
-                raise ValueError("Fetcher Agent returned empty response (possibly due to API 429 or connection failure).")
+                raise ValueError(f"Fetcher Agent returned empty response using {current_model} (possibly due to API 429).")
                 
             # Strip markdown block formatting if LLM returned it
             if response_clean.startswith("```"):
@@ -100,7 +105,7 @@ def run_fetcher(url: str, retries: int = 3, delay: float = 65.0) -> dict:
                 
             return data
         except Exception as e:
-            print(f"[Fetcher] Attempt {attempt + 1} of {retries} failed: {e}")
+            print(f"[Fetcher] Attempt {attempt + 1} of {retries} with {current_model} failed: {e}")
             if attempt < retries - 1:
                 print(f"[Fetcher] Waiting {delay} seconds before retrying...")
                 time.sleep(delay)

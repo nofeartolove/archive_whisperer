@@ -45,14 +45,19 @@ validator = LlmAgent(
     """,
 )
 
-def run_validator(item_id: str, transcription: str, retries: int = 3, delay: float = 65.0) -> dict:
+def run_validator(item_id: str, transcription: str, retries: int = 3, delay: float = 10.0) -> dict:
     """
     Runs the validator agent to fetch ground truth, then computes WER and CER.
     Reuses the line break normalization logic.
     """
     import time
     
+    fallback_models = ["gemini-3.5-flash", "gemini-2.5-flash", "gemini-1.5-flash"]
+    
     for attempt in range(retries):
+        current_model = fallback_models[attempt % len(fallback_models)]
+        validator.model = current_model
+        
         try:
             runner = InMemoryRunner(agent=validator)
             # Create unique session ID per attempt
@@ -78,7 +83,7 @@ def run_validator(item_id: str, transcription: str, retries: int = 3, delay: flo
                             
             response_clean = response_text.strip()
             if not response_clean:
-                raise ValueError("Validator Agent returned empty response (possibly due to API 429 or connection failure).")
+                raise ValueError(f"Validator Agent returned empty response using {current_model} (possibly due to API 429).")
                 
             if response_clean.startswith("```"):
                 lines = response_clean.split("\n")
@@ -122,7 +127,7 @@ def run_validator(item_id: str, transcription: str, retries: int = 3, delay: flo
                 "ground_truth": ground_truth
             }
         except Exception as e:
-            print(f"[Validator] Attempt {attempt + 1} of {retries} failed: {e}")
+            print(f"[Validator] Attempt {attempt + 1} of {retries} with {current_model} failed: {e}")
             if attempt < retries - 1:
                 print(f"[Validator] Waiting {delay} seconds before retrying...")
                 time.sleep(delay)
