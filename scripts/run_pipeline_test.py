@@ -9,7 +9,7 @@ if str(project_root) not in sys.path:
 
 from agents.orchestrator import run_pipeline
 
-def test_page(page_name: str, url: str):
+def run_single_page_test(page_name: str, url: str):
     print(f"\n==================================================")
     print(f"RUNNING PIPELINE FOR: {page_name}")
     print(f"URL: {url}")
@@ -89,7 +89,7 @@ def main():
         if i > 0:
             print(f"\n[Test Runner] Waiting 15 seconds before starting next page to respect API rate limits...")
             time.sleep(15)
-        test_page(name, url)
+        run_single_page_test(name, url)
 
 if __name__ == "__main__":
     main()

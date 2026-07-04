@@ -67,9 +67,9 @@ def sanitize_user_input(text: str) -> str:
     if not text:
         return ""
         
-    # 1. Enforce 2000-char cap
+    # 1. Enforce 2000-char cap by truncating
     if len(text) > 2000:
-        raise ValueError(f"Input length ({len(text)} chars) exceeds the security cap of 2000 characters.")
+        text = text[:2000]
         
     # 2. Scanning for potential prompt injection patterns (case-insensitive)
     injection_patterns = [
@@ -78,7 +78,10 @@ def sanitize_user_input(text: str) -> str:
         r"bypass\s+security",
         r"you\s+must\s+now\s+act\s+as",
         r"jailbreak",
-        r"instruction\s+bypass"
+        r"instruction\s+bypass",
+        r"\[image\].*?\[/image\]",
+        r"<script.*?>",
+        r"javascript\s*:"
     ]
     
     for pattern in injection_patterns:
