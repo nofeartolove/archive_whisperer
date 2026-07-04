@@ -5,4 +5,4 @@ Pillow
 python-dotenv
 jiwer
 mcp==1.28.1
-
+pytest

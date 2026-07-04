@@ -62,7 +62,7 @@ sequenceDiagram
 ## 3. Quota & Rate Limit Resiliency (Dynamic Model Rotation)
 To operate reliably on free-tier APIs and avoid quota blocks (`429 RESOURCE_EXHAUSTED`), Archive Whisperer implements **Dynamic Model Rotation**:
 - **Automatic Fallback**: If an agent call fails due to rate limiting, the retry loop catches the exception and dynamically swaps the model to the next fallback option in the chain:
-  $$\text{gemini-3.5-flash} \longrightarrow \text{gemini-2.5-flash} \longrightarrow \text{gemini-1.5-flash}$$
+  $$\text{gemini-3.5-flash} \longrightarrow \text{gemini-2.5-flash} \longrightarrow \text{gemini-3.1-flash-lite} \longrightarrow \text{gemini-2.5-flash-lite}$$
 - **Optimized Latency**: Changing target models immediately bypasses active 429 blocks, allowing retry sleep delays to be reduced to just **10 seconds** rather than minutes.
 - **Pacing**: Outbound pipeline executions between multiple pages are paced with a **15-second delay** to respect requests-per-minute ceilings.
 
