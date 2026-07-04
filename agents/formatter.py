@@ -114,7 +114,7 @@ def run_formatter(text: str, metadata: dict, retries: int = 4, delay: float = 10
 ## Metadata
 - **Item ID**: {item_id}
 - **Page Number**: {page_num}
-- **Source URL**: {metadata.get('source_url', 'N/A')}
+- **Source URL**: {metadata.get('url', 'N/A')}
 - **MIME Type**: {metadata.get('mime_type', 'N/A')}
 - **File Size**: {metadata.get('size_bytes', 'N/A')} bytes
 - **Validation WER**: {wer_str}
@@ -138,6 +138,7 @@ if __name__ == "__main__":
     test_meta = {
         "item_id": "mss5241.mss5241_01_001_089",
         "page": 49,
+        "url": "https://tile.loc.gov/image-services/iiif/service:mss:mss52410:001:0049/full/pct:25/0/default.jpg",
         "source_url": "https://tile.loc.gov/image-services/iiif/service:mss:mss52410:001:0049/full/pct:25/0/default.jpg",
         "mime_type": "image/jpeg",
         "size_bytes": 102400,

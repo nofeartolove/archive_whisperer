@@ -13,6 +13,7 @@ def test_formatter_writes_outputs():
         "cer": 0.08,
         "mime_type": "image/jpeg",
         "size_bytes": 1024,
+        "url": "https://www.loc.gov/item/test_item_formatter/",
         "source_url": "https://www.loc.gov/item/test_item_formatter/"
     }
     

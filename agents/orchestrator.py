@@ -233,11 +233,20 @@ def run_pipeline(url: str) -> dict:
     }
 
 if __name__ == "__main__":
-    # Test on one page (page 11)
-    test_url = "https://tile.loc.gov/image-services/iiif/service:mss:mss5241:01:011/full/pct:100/0/default.jpg"
-    try:
-        res = run_pipeline(test_url)
-        print("\nPipeline execution summary:")
-        print(json.dumps(res, indent=2))
-    except Exception as e:
-        print(f"Pipeline error: {e}")
+    # Test on all 3 Gibson benchmark pages sequentially
+    urls = [
+        "https://tile.loc.gov/image-services/iiif/service:mss:mss5241:01:011/full/pct:100/0/default.jpg",
+        "https://tile.loc.gov/image-services/iiif/service:mss:mss5241:01:037/full/pct:100/0/default.jpg",
+        "https://tile.loc.gov/image-services/iiif/service:mss:mss5241:01:049/full/pct:100/0/default.jpg"
+    ]
+    import time
+    for i, url in enumerate(urls):
+        if i > 0:
+            print("\nPacing 15 seconds between page runs to respect API limits...")
+            time.sleep(15)
+        try:
+            res = run_pipeline(url)
+            print(f"\nPipeline execution summary for {url}:")
+            print(json.dumps(res, indent=2))
+        except Exception as e:
+            print(f"Pipeline error for {url}: {e}")

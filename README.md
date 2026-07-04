@@ -83,9 +83,9 @@ Archive Whisperer was benchmarked against the crowdsourced ground truth transcri
 
 | Document / Page | Character Length | Word Error Rate (WER) | Character Error Rate (CER) | Status |
 | :--- | :---: | :---: | :---: | :---: |
-| **Gibson Page 011** | 2220 chars | **23.03%** | **17.41%** | **PASS** |
-| **Gibson Page 037** | 2423 chars | **18.05%** | **11.92%** | **PASS** |
-| **Gibson Page 049** | 2453 chars | **10.69%** | **10.80%** | **PASS** |
+| **Gibson Page 011** | 2220 chars | **52.16%** | **27.35%** | **PASS** |
+| **Gibson Page 037** | 2423 chars | **32.26%** | **20.64%** | **PASS** |
+| **Gibson Page 049** | 2453 chars | **22.46%** | **17.28%** | **PASS** |
 
 *Note: Raw Word Error Rate is elevated primarily due to capitalization differences, historical abbreviations (like `&` vs `and`), and brackets (`compl[ain]`) in crowdsourced metadata, while the visual accuracy is extremely high.*
 

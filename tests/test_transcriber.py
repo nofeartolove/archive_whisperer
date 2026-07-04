@@ -11,6 +11,7 @@ def check_file_exists(path: pathlib.Path, file_description: str):
     if not path.exists():
         pytest.fail(f"ERROR: Required {file_description} is missing at {path}")
 
+@pytest.mark.live
 def test_transcriber_returns_nonempty_output():
     # Arrange
     image_path = IMAGES_DIR / "gibson_page011.jpg"
@@ -23,6 +24,7 @@ def test_transcriber_returns_nonempty_output():
     assert isinstance(result, str)
     assert len(result.strip()) > 0
 
+@pytest.mark.live
 def test_transcriber_output_format():
     # Arrange
     image_path = IMAGES_DIR / "gibson_page011.jpg"
@@ -53,6 +55,7 @@ def test_transcriber_output_format():
     if len(lines) > 1:
         assert "|" in result_clean, "Output spans multiple lines but does not contain '|' line break separators"
 
+@pytest.mark.live
 @pytest.mark.parametrize("page_str", ["011", "037", "049"])
 def test_transcriber_accuracy_against_ground_truth(page_str):
     # Arrange
