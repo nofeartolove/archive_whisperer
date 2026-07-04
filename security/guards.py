@@ -89,3 +89,22 @@ def sanitize_user_input(text: str) -> str:
             raise ValueError("Security Alert: Input contains potential prompt injection patterns.")
             
     return text
+
+def load_skill_instruction(skill_name: str) -> str:
+    """Reads the instruction text under '## Instructions' in skills/<skill_name>/SKILL.md."""
+    import pathlib
+    
+    project_root = pathlib.Path(__file__).parent.parent.resolve()
+    skill_file = project_root / "skills" / skill_name / "SKILL.md"
+    
+    if not skill_file.exists():
+        raise FileNotFoundError(f"SKILL.md file not found for skill '{skill_name}' at {skill_file}")
+        
+    content = skill_file.read_text(encoding="utf-8")
+    
+    # Parse the content after '## Instructions' heading
+    parts = content.split("## Instructions")
+    if len(parts) < 2:
+        return content.strip()
+        
+    return parts[1].strip()

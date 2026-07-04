@@ -79,7 +79,7 @@ Archive Whisperer enforces security guardrails at every layer:
 ---
 
 ## 5. Quantitative Evaluation (WER & CER Benchmarks)
-Archive Whisperer was benchmarked against the crowdsourced ground truth transcripts of the **William T. Sherman Civil War Diaries (1864)**:
+Archive Whisperer was benchmarked against the crowdsourced ground truth transcripts of the **Samuel J. Gibson Civil War Diary (1864)**:
 
 | Document / Page | Character Length | Word Error Rate (WER) | Character Error Rate (CER) | Status |
 | :--- | :---: | :---: | :---: | :---: |
@@ -125,9 +125,9 @@ pip install -r requirements.txt
 ```
 
 ### 2. Configure API Credentials
-Create a `.env` file in the project root containing your Gemini API key:
+Create a `.env` file in the project root containing your API key:
 ```env
-GEMINI_API_KEY=AIzaSy...
+GOOGLE_API_KEY=your_google_api_key_here
 ```
 
 ### 3. Run the Pipeline Test Script

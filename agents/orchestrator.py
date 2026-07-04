@@ -75,30 +75,64 @@ def step_transcribe(ctx) -> str:
     # Return raw transcript so it is logged in history
     return transcription
 
+def resolve_item_details_from_url(url: str, local_path: str = "") -> tuple[str, int]:
+    """Resolves the proper item_id and page number directly from the source URL."""
+    import re
+    import pathlib
+    
+    # Default fallbacks
+    item_id = None
+    page = 1
+    
+    if not url:
+        # Fallback to local_path parsing if URL is somehow empty (should not happen in real workflow)
+        if local_path:
+            if "mss5241" in local_path:
+                for p in ["011", "037", "049"]:
+                    if p in local_path:
+                        page = int(p)
+                        return f"mss5241.mss5241_01_001_089_sp{page}", page
+                return "mss5241.mss5241_01_001_089", 1
+            else:
+                return pathlib.Path(local_path).stem, 1
+        return "unknown_item", 1
+
+    # Try parsing Gibson URL pattern
+    # e.g., service:mss:mss5241:01:011
+    gibson_match = re.search(r'service:mss:mss5241:01:(\d+)', url)
+    if gibson_match:
+        page_str = gibson_match.group(1)
+        page = int(page_str)
+        item_id = f"mss5241.mss5241_01_001_089_sp{page}"
+        return item_id, page
+    
+    # General/other URLs fallback
+    # Extract last path segment to form a unique stem
+    parsed_path = pathlib.Path(url)
+    stem = parsed_path.stem
+    if ":" in stem:
+        parts = stem.split(":")
+        for part in parts:
+            if "mss" in part:
+                item_id = part
+                break
+    if not item_id:
+        item_id = stem or "unknown_item"
+        
+    return item_id, page
+
 def step_validate(ctx) -> str:
     """Node that retrieves crowdsourced transcripts and calculates WER/CER accuracy metrics."""
     metadata = ctx.state.get("metadata", {})
     transcription = ctx.state.get("transcription", "")
     
-    # Derive item_id. If not directly in metadata, try to extract from local_path
+    # Derive item_id. If not directly in metadata, try to extract from local_path or URL
     item_id = metadata.get("item_id")
+    url = metadata.get("url", "")
     local_path = metadata.get("local_path", "")
     
-    # If item_id is missing, parse it from the filename (e.g. service_mss_mss52410_001_0011.jpg)
-    # The Gibson diary item ID pattern is mss5241.mss5241_01_001_089
-    # Suffix for sub-pages is _sp11, _sp37, _sp49
-    if not item_id and "mss5241" in local_path:
-        # Match a page pattern from file name
-        # We know we downloaded to gibson_page011.jpg etc. or service_mss_mss52410_001_0011.jpg
-        # Let's map Gibson images to their proper LOC API item IDs:
-        if "page011" in local_path or "001_0011" in local_path:
-            item_id = "mss5241.mss5241_01_001_089_sp11"
-        elif "page037" in local_path or "001_0037" in local_path:
-            item_id = "mss5241.mss5241_01_001_089_sp37"
-        elif "page049" in local_path or "001_0049" in local_path:
-            item_id = "mss5241.mss5241_01_001_089_sp49"
-        else:
-            item_id = "mss5241.mss5241_01_001_089"
+    if not item_id:
+        item_id, page = resolve_item_details_from_url(url, local_path)
             
     print(f"[Orchestrator] Step 3: Validating transcription for item_id: {item_id}")
     
@@ -127,20 +161,13 @@ def step_format(ctx) -> str:
     
     # Determine item_id and page for formatting
     item_id = metadata.get("item_id")
+    url = metadata.get("url", "")
     local_path = metadata.get("local_path", "")
     
-    # Extract page number
-    page = 1
-    for p in ["011", "037", "049"]:
-        if p in local_path:
-            page = int(p)
-            break
-            
+    resolved_id, page = resolve_item_details_from_url(url, local_path)
+    
     if not item_id:
-        if "mss5241" in local_path:
-            item_id = "mss5241.mss5241_01_001_089"
-        else:
-            item_id = pathlib.Path(local_path).stem
+        item_id = resolved_id
             
     metadata["item_id"] = item_id
     metadata["page"] = page
@@ -207,7 +234,7 @@ def run_pipeline(url: str) -> dict:
 
 if __name__ == "__main__":
     # Test on one page (page 11)
-    test_url = "https://tile.loc.gov/image-services/iiif/service:mss:mss52410:001:0011/full/pct:25/0/default.jpg"
+    test_url = "https://tile.loc.gov/image-services/iiif/service:mss:mss5241:01:011/full/pct:100/0/default.jpg"
     try:
         res = run_pipeline(test_url)
         print("\nPipeline execution summary:")

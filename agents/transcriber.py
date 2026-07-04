@@ -12,19 +12,21 @@ from google.genai import types
 # Load env variables (automatically walks up to find .env in project root)
 dotenv.load_dotenv()
 
-# Define the transcriber agent using gemini-3.5-flash
+# Add project root to sys.path if not present (to import security.guards)
+import sys
+project_root = pathlib.Path(__file__).parent.parent.resolve()
+if str(project_root) not in sys.path:
+    sys.path.append(str(project_root))
+
+from security.guards import load_skill_instruction
+
 transcriber = LlmAgent(
     name="transcriber_agent",
     model="gemini-3.5-flash",
-    instruction="""
-    You are an expert paleographer specializing in 19th-century American handwriting.
-    Transcribe the handwritten text in the provided image exactly as written.
-    Rules: preserve original spelling/punctuation, mark illegible words as [illegible],
-    note line breaks with |, return ONLY the transcription — no commentary.
-    """,
+    instruction=load_skill_instruction("transcribe_image"),
 )
 
-def transcribe_image_file(image_path: str | pathlib.Path, retries: int = 3, delay: float = 10.0) -> str:
+def transcribe_image_file(image_path: str | pathlib.Path, retries: int = 4, delay: float = 10.0) -> str:
     """Helper function to run the transcriber agent on an image file with fallback models on failure."""
     import time
     path = pathlib.Path(image_path)
@@ -42,7 +44,7 @@ def transcribe_image_file(image_path: str | pathlib.Path, retries: int = 3, dela
         ]
     )
     
-    fallback_models = ["gemini-3.5-flash", "gemini-2.5-flash", "gemini-1.5-flash"]
+    fallback_models = ["gemini-3.5-flash", "gemini-2.5-flash", "gemini-3.1-flash-lite", "gemini-2.5-flash-lite"]
     
     for attempt in range(retries):
         current_model = fallback_models[attempt % len(fallback_models)]

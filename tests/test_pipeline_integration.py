@@ -16,11 +16,11 @@ from agents.orchestrator import run_pipeline
 def test_full_pipeline_on_gibson_page011():
     # Arrange
     url = "https://tile.loc.gov/image-services/iiif/service:mss:mss5241:01:011/full/pct:100/0/default.jpg"
-    item_id = "mss5241.mss5241_01_001_089"
+    item_id = "mss5241.mss5241_01_001_089_sp11"
     page_num = 11
     
     mock_metadata = {
-        "local_path": "data/images/service_mss_mss5241_01_page011.jpg",
+        "local_path": "data/images/service_mss_mss5241_01_011.jpg",
         "mime_type": "image/jpeg",
         "size_bytes": 943515,
         "url": url
@@ -67,7 +67,7 @@ def test_full_pipeline_on_gibson_page011():
             # 2. Verify all orchestration stages were called
             mock_fetch.assert_called_once_with(url)
             mock_transcribe.assert_called_once_with(project_root / mock_metadata["local_path"])
-            mock_validate.assert_called_once_with(f"{item_id}_sp11", mock_transcription)
+            mock_validate.assert_called_once_with(item_id, mock_transcription)
             
             # 3. Assert Markdown and TXT files were generated in output/
             assert md_output_file.exists(), "Markdown report was not created by the formatter stage"

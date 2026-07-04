@@ -13,6 +13,10 @@ dotenv.load_dotenv()
 
 # Find project root
 project_root = pathlib.Path(__file__).parent.parent.resolve()
+if str(project_root) not in sys.path:
+    sys.path.append(str(project_root))
+
+from security.guards import load_skill_instruction
 
 from google.adk.tools.mcp_tool.mcp_session_manager import StdioConnectionParams
 from mcp import StdioServerParameters
@@ -32,27 +36,17 @@ validator = LlmAgent(
     name="validator_agent",
     model="gemini-3.5-flash",
     tools=[loc_toolset],
-    instruction="""
-    You are a validation agent for historical manuscript transcriptions.
-    Your task is to call the `get_bythepeople_transcript` tool with the provided `item_id`
-    to retrieve the official crowdsourced ground truth transcription.
-    
-    Once you call the tool:
-    1. If the tool indicates the transcript is not available, output: {"available": false, "ground_truth": ""}
-    2. If the tool returns a transcript, output a clean JSON object containing the ground truth:
-       {"available": true, "ground_truth": "<insert transcription text here>"}
-       Do not add any preamble, markdown code blocks, or conversational text.
-    """,
+    instruction=load_skill_instruction("validate_transcription"),
 )
 
-def run_validator(item_id: str, transcription: str, retries: int = 3, delay: float = 10.0) -> dict:
+def run_validator(item_id: str, transcription: str, retries: int = 4, delay: float = 10.0) -> dict:
     """
     Runs the validator agent to fetch ground truth, then computes WER and CER.
     Reuses the line break normalization logic.
     """
     import time
     
-    fallback_models = ["gemini-3.5-flash", "gemini-2.5-flash", "gemini-1.5-flash"]
+    fallback_models = ["gemini-3.5-flash", "gemini-2.5-flash", "gemini-3.1-flash-lite", "gemini-2.5-flash-lite"]
     
     for attempt in range(retries):
         current_model = fallback_models[attempt % len(fallback_models)]

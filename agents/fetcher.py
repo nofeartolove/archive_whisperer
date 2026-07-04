@@ -12,6 +12,10 @@ dotenv.load_dotenv()
 
 # Find project root
 project_root = pathlib.Path(__file__).parent.parent.resolve()
+if str(project_root) not in sys.path:
+    sys.path.append(str(project_root))
+
+from security.guards import load_skill_instruction
 
 from google.adk.tools.mcp_tool.mcp_session_manager import StdioConnectionParams
 from mcp import StdioServerParameters
@@ -31,26 +35,14 @@ fetcher = LlmAgent(
     name="fetcher_agent",
     model="gemini-3.5-flash",
     tools=[loc_toolset],
-    instruction="""
-    You are a specialized Fetcher Agent for historical manuscripts.
-    Your task is to take a Library of Congress URL, call the `fetch_loc_page` tool to download the image,
-    and return the image metadata.
-    
-    Security Rules:
-    1. Parse the JSON returned by `fetch_loc_page`.
-    2. Check the `mime_type` field. If it does not start with "image/" (e.g. it is text/html or application/pdf),
-       you MUST reject it and output a JSON block with {"error": "Invalid MIME type: <type>"}.
-    3. If valid, return only the raw JSON dictionary from the tool:
-       {"local_path": "...", "mime_type": "...", "size_bytes": ..., "url": "..."}
-       No conversational filler or markdown code blocks around the JSON.
-    """,
+    instruction=load_skill_instruction("fetch_image"),
 )
 
-def run_fetcher(url: str, retries: int = 3, delay: float = 10.0) -> dict:
+def run_fetcher(url: str, retries: int = 4, delay: float = 10.0) -> dict:
     """Runs the fetcher agent on the given URL, enforces security checks on the MIME type, and returns metadata."""
     import time
     
-    fallback_models = ["gemini-3.5-flash", "gemini-2.5-flash", "gemini-1.5-flash"]
+    fallback_models = ["gemini-3.5-flash", "gemini-2.5-flash", "gemini-3.1-flash-lite", "gemini-2.5-flash-lite"]
     
     for attempt in range(retries):
         current_model = fallback_models[attempt % len(fallback_models)]

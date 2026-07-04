@@ -12,6 +12,10 @@ dotenv.load_dotenv()
 
 # Find project root
 project_root = pathlib.Path(__file__).parent.parent.resolve()
+if str(project_root) not in sys.path:
+    sys.path.append(str(project_root))
+
+from security.guards import load_skill_instruction
 
 from google.adk.tools.mcp_tool.mcp_session_manager import StdioConnectionParams
 from mcp import StdioServerParameters
@@ -31,29 +35,17 @@ formatter = LlmAgent(
     name="formatter_agent",
     model="gemini-3.5-flash",
     tools=[loc_toolset],
-    instruction="""
-    You are a specialized Formatter Agent. Your task is to save the transcription and metadata.
-    You must call the `save_transcript` tool with the parameters:
-    - `text`: the transcribed text
-    - `metadata`: a dictionary containing:
-        - "item_id": the unique ID of the document (e.g. mss5241.mss5241_01_001_089)
-        - "page": the page number (int)
-        - "source_url": the source URL of the page
-        - "timestamp": current timestamp or date
-        - "wer": the calculated Word Error Rate (float or null)
-        - "cer": the calculated Character Error Rate (float or null)
-        
-    Once you call the tool, output only the tool's confirmation string.
-    """,
+    instruction=load_skill_instruction("format_output"),
 )
 
-def run_formatter(text: str, metadata: dict, retries: int = 3, delay: float = 10.0) -> str:
+def run_formatter(text: str, metadata: dict, retries: int = 4, delay: float = 10.0) -> str:
     """
     Runs the formatter agent to save the JSON transcription via MCP,
     and writes Markdown (.md) and plain text (.txt) versions directly to output/.
     """
     import time
     
+    fallback_models = ["gemini-3.5-flash", "gemini-2.5-flash", "gemini-3.1-flash-lite", "gemini-2.5-flash-lite"]
     item_id = metadata.get("item_id", "unknown_item")
     page_num = metadata.get("page", 1)
     try:
@@ -61,8 +53,6 @@ def run_formatter(text: str, metadata: dict, retries: int = 3, delay: float = 10
     except (ValueError, TypeError):
         page_num = 1
         
-    fallback_models = ["gemini-3.5-flash", "gemini-2.5-flash", "gemini-1.5-flash"]
-    
     for attempt in range(retries):
         current_model = fallback_models[attempt % len(fallback_models)]
         formatter.model = current_model
