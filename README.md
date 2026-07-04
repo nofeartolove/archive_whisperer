@@ -91,6 +91,16 @@ Archive Whisperer was benchmarked against the crowdsourced ground truth transcri
 
 ---
 
+## 5.1. Sample Output
+To allow judges to review transcription quality and formatting details without running any code, the generated output reports are available in the repository:
+* [gibson_page011_report.md](sample_output/gibson_page011_report.md)
+* [gibson_page037_report.md](sample_output/gibson_page037_report.md)
+* [gibson_page049_report.md](sample_output/gibson_page049_report.md)
+
+Each report contains the raw model transcription (including preserved line breaks `|`), Library of Congress crowdsourced ground truth, and the exact jiwer-calculated Word Error Rate (WER) and Character Error Rate (CER).
+
+---
+
 ## 6. Project Directory Layout
 ```text
 archive_whisperer/
