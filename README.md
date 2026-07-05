@@ -2,6 +2,8 @@
 
 Archive Whisperer is an enterprise-grade, highly resilient multi-agent paleography system for transcribing historical cursive manuscripts, built using the **Google Agent Development Kit (ADK)** and **FastMCP**.
 
+Verified reproducible from a fresh clone -- see [REPRODUCIBILITY.md](REPRODUCIBILITY.md) for the full verification log and a one-command script to check it yourself.
+
 ---
 
 ## 1. Problem Statement & Motivation
