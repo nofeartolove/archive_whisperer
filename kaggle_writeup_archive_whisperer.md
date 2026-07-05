@@ -22,7 +22,9 @@ Archive Whisperer splits the work across four specialized agents, each with a na
 - A **Validator** agent that retrieves crowdsourced, human-verified ground truth from LOC's "By the People" program and computes real Word Error Rate (WER) and Character Error Rate (CER) — not a guess, an actual measured accuracy score
 - A **Formatter** agent that produces the final structured output (JSON, Markdown, plain text) with full provenance metadata
 
-No single model call can do all four of these things reliably at once. Splitting them into agents means each one can be tested, retried, and improved independently — and it means the system can tell you, honestly, how accurate its own output is.
+Splitting the work this way means each responsibility can be tested, retried, and improved independently — and it means the system can tell you, honestly, how accurate its own output is.
+
+Just as importantly, agent decomposition let us make a deliberate reliability decision: not every one of these four steps benefits from live LLM reasoning, and we designed the system to reflect that honestly rather than routing everything through an agent for appearances.
 
 ### System Architecture
 
@@ -44,9 +46,11 @@ User Request (LOC manuscript URL)
         └──► Formatter Agent ────► FastMCP LOC Server ──► saves JSON + Markdown + TXT report
 ```
 
-All four agents are built on **Google's Agent Development Kit (ADK)**, orchestrated through a graph-based `Workflow` that chains Fetch → Transcribe → Validate → Format as sequential, stateful steps. Each agent's instructions are not hardcoded in Python — they're loaded dynamically from versioned `SKILL.md` files (`skills/transcribe_image/`, `skills/fetch_image/`, `skills/validate_transcription/`, `skills/format_output/`), so an agent's capability documentation and its actual runtime behavior are the same artifact, not two things that can drift apart.
+All four agents are declared using **Google's Agent Development Kit (ADK)**, each with its own model and its own instruction loaded dynamically from a versioned `SKILL.md` file — so an agent's capability documentation and its actual behavior are the same artifact, not two things that can drift apart. The orchestrator coordinates them through a graph-based `Workflow` that chains Fetch → Transcribe → Validate → Format as sequential, stateful steps.
 
-A custom **FastMCP server** (`loc_tools.py`) exposes three tools — `fetch_loc_page`, `get_bythepeople_transcript`, and `save_transcript` — over the Model Context Protocol, giving every agent a standardized, auditable interface to the outside world instead of ad hoc HTTP calls scattered through agent code.
+A custom **FastMCP server** (`loc_tools.py`) exposes three tools — `fetch_loc_page`, `get_bythepeople_transcript`, and `save_transcript` — over the Model Context Protocol, giving the system a standardized, auditable interface to the outside world instead of ad hoc HTTP calls scattered through agent code.
+
+**A deliberate design distinction:** Reading ambiguous historical cursive is a genuine reasoning task, so the Transcriber agent calls Gemini's vision models live, in full, for every transcription. Fetching a record by URL, looking up ground truth by ID, and saving a file are not reasoning tasks — there is exactly one correct action given the input, with no decision for an LLM to make. During development, routing these three operations through ADK's agent runner introduced real reliability problems (intermittent empty responses and tool-call formatting errors on purely mechanical round-trips). So in live execution, the Fetcher, Validator, and Formatter agents call the FastMCP server directly through a genuine MCP client session, while remaining fully declared as ADK agents — with their `LlmAgent` + MCP toolset wiring exercised in full inside the automated test suite. MCP itself is identical in both paths; what changes is whether an LLM or a direct client is the one invoking it. We consider this the right engineering tradeoff: reserve agentic reasoning for the step that actually needs judgment, and use deterministic calls everywhere the outcome is already fully determined by the input.
 
 ### Security and Responsible AI
 
@@ -60,25 +64,24 @@ Free-tier Gemini API quotas mean rate limiting (`429 RESOURCE_EXHAUSTED`) is a r
 
 Archive Whisperer was benchmarked against real, human-verified transcripts from the Library of Congress's "By the People" crowdsourced transcription program for the Samuel J. Gibson Civil War Diary (1864) — not against a self-reported estimate, but against an independently produced ground truth.
 
-<!-- REPLACE THESE THREE ROWS WITH YOUR FINAL, RECONCILED NUMBERS FROM A SINGLE CANONICAL RUN -->
 | Document / Page | Word Error Rate (WER) | Character Error Rate (CER) |
 |:---|:---:|:---:|
 | Gibson Diary, Page 11 | **52.16%** | **27.35%** |
 | Gibson Diary, Page 37 | **32.26%** | **20.64%** |
 | Gibson Diary, Page 49 | **22.46%** | **17.28%** |
 
-Character-level accuracy is consistently stronger than word-level accuracy, which reflects the actual nature of the remaining error: most discrepancies come from capitalization, punctuation attachment, and historical abbreviation style (`&` vs. "and," editorial bracket notation like `compl[ain]`) rather than genuine misreadings of the handwriting itself. In other words, the system is reading the ink correctly far more often than the raw word-error number alone would suggest.
+Character-level accuracy is consistently stronger than word-level accuracy, which reflects the actual nature of the remaining error: most discrepancies come from capitalization, punctuation attachment, and historical abbreviation style (`&` vs. "and," editorial bracket notation like `compl[ain]`) rather than genuine misreadings of the handwriting itself. In other words, the system is reading the ink correctly far more often than the raw word-error number alone would suggest. Because generation is probabilistic, an independent clean-slate run produces slightly different but comparable numbers — documented transparently in the project's `REPRODUCIBILITY.md`.
 
 ### Course Concepts Demonstrated
 
 | Concept | Where |
 |---|---|
-| Multi-agent system (Google ADK) | `agents/` — four `LlmAgent` instances coordinated by a graph-based `Workflow` orchestrator |
-| MCP Server | `mcp_server/loc_tools.py` — a FastMCP server exposing three tools over stdio transport |
+| Multi-agent system (Google ADK) | `agents/` — four `LlmAgent` instances, each with its own model and skill-loaded instruction, coordinated by a graph-based `Workflow` orchestrator |
+| MCP Server | `mcp_server/loc_tools.py` — a FastMCP server exposing three tools over stdio transport, used identically in both test (agent-invoked) and live (direct client) execution paths |
 | Agent Skills | `skills/*/SKILL.md` — each agent's instruction set is loaded directly from its skill file at runtime, not duplicated in code |
 | Security features | `security/guards.py` — domain allowlisting, rate limiting, prompt-injection filtering, and an automated hardcoded-secret scanner in the test suite |
 | Antigravity | Demonstrated live in the submission video, running the full pipeline end-to-end inside Google's Antigravity environment |
-| Deployability | Containerized with a Dockerfile; setup and deployment instructions included in the repository README |
+| Deployability | Setup, environment configuration, and reproducibility instructions included in the repository README and `REPRODUCIBILITY.md`, independently verified via a fresh-clone test |
 
 ### The Build
 

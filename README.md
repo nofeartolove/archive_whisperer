@@ -59,6 +59,17 @@ sequenceDiagram
 4. **Formatter Agent (`agents/formatter.py`)**: Generates standardized plaintext transcripts and formatted Markdown files containing transcription summaries, metadata, and quality metrics.
 5. **FastMCP Server (`mcp_server/loc_tools.py`)**: Hosts custom tools for allowed-domain HTTP fetching, By the People database schema parsing, and structured report outputs.
 
+### Design Note: Where Agentic Reasoning Is Used, and Where It Deliberately Isn't
+
+Every agent above is declared as a Google ADK `LlmAgent`, with its own model and its own instruction loaded directly from a versioned `SKILL.md` file. That declaration is exercised in full inside the test suite, where each agent runs through ADK's `InMemoryRunner` -- the LLM genuinely reasons about whether and how to call its MCP tool, using mocked responses for fast, deterministic verification.
+
+In **live execution**, the system makes a deliberate distinction between two categories of work:
+
+- **Transcription requires judgment.** Reading ambiguous 19th-century cursive is a genuine reasoning task -- there's no deterministic function for "what does this faded word say." The Transcriber agent calls Gemini's vision models live, in full, for every transcription.
+- **Fetching, validating, and saving do not require judgment.** Given a URL or an item ID, there is exactly one correct action to take -- there's no decision for an LLM to make. Routing these through an LLM added latency, cost, and a real reliability problem: ADK's `InMemoryRunner` intermittently returned empty responses or raised tool-call-formatting errors on these deterministic round-trips during live testing. So for live runs only, the Fetcher, Validator, and Formatter agents call the FastMCP server directly through a genuine MCP client session (`mcp.client.stdio`), bypassing the LLM reasoning step entirely for these three mechanical operations.
+
+This means: **MCP itself is used identically in both modes** -- the same FastMCP server, the same three tools, the same protocol. What changes is *who* invokes it: an LLM-driven agent in tests, and a direct, deterministic Python client in production. We consider this a deliberate reliability decision, not a shortcut -- reserving agentic reasoning for the one step in the pipeline that genuinely needs it, and using direct calls everywhere the outcome is already fully determined by the input.
+
 ---
 
 ## 3. Quota & Rate Limit Resiliency (Dynamic Model Rotation)
@@ -90,6 +101,8 @@ Archive Whisperer was benchmarked against the crowdsourced ground truth transcri
 | **Gibson Page 049** | 2453 chars | **22.46%** | **17.28%** | **PASS** |
 
 *Note: Raw Word Error Rate is elevated primarily due to capitalization differences, historical abbreviations (like `&` vs `and`), and brackets (`compl[ain]`) in crowdsourced metadata, while the visual accuracy is extremely high.*
+
+*Note on reproducibility: Gemini's vision output is probabilistic, so a fresh run may produce slightly different WER/CER than the numbers above -- see [REPRODUCIBILITY.md](REPRODUCIBILITY.md) for an example of this natural variance across an independent clean-slate run.*
 
 ---
 
