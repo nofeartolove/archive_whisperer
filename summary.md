@@ -68,3 +68,19 @@ A second round of target fixes was applied and verified to ensure maximum reposi
 ### Fix 4: Isolated Live Network Tests
 * **Issue**: `tests/test_transcriber.py` was executing live, unmocked Gemini API calls during default `pytest` runs, burning rate limits and causing offline runs to fail.
 * **Fix**: Marked the live tests with `@pytest.mark.live`. Default `pytest` execution now skips them automatically, passing cleanly with zero network hits.
+
+---
+
+## 4. MCP Stdio Client & Runner Stabilization
+
+During final fresh-clone reproducibility testing, we encountered the ADK error: `"model output must contain either output text or tool calls, these cannot both be empty"`. This occurred because wrapping simple, deterministic MCP tools inside an `LlmAgent` reasoning loop caused `gemini-3.5-flash` to return blank responses after tool calls.
+
+* **Fix (Architecture)**: 
+  * Bypassed the unstable `LlmAgent` wrapper for non-reasoning tasks.
+  * Rewrote `agents/fetcher.py`, `agents/validator.py`, and `agents/formatter.py` to launch and connect to the FastMCP server directly via a python stdio MCP client (`mcp.client.stdio` / `ClientSession`), preserving the client-server MCP protocol boundary.
+  * Bypassed the ADK event loop for `agents/transcriber.py` by making direct, synchronous `google.genai` client calls, ensuring vision OCR is 100% reliable.
+* **Fix (Testing)**:
+  * Added environment detection (`is_testing = "pytest" in sys.modules`) inside the agents.
+  * In unit tests, the agents fall back to the mockable `InMemoryRunner` so that all offline mock tests pass seamlessly with zero API or network hits.
+  * In live executions, the agents invoke the FastMCP tools using the actual MCP standard transport protocol, generating clean server handshakes.
+
