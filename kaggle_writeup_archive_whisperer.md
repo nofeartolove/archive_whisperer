@@ -3,6 +3,10 @@
 
 ---
 
+> **A note on the demo:** No live public demo is hosted for this submission. Per the Submission Requirements, this Writeup instead links to a public GitHub repository containing the full source code, a step-by-step setup guide, and an independently reproducible fresh-clone verification log (`REPRODUCIBILITY.md`) — including a captured pytest run and a one-command verifier script — so judges can run Archive Whisperer themselves rather than take the results on faith.
+
+---
+
 ### The Problem
 
 More than 175 million handwritten pages sit in U.S. archives, and fewer than 5% are machine-readable today. Standard OCR engines are built for uniform, printed typefaces — they rely on segmenting individual characters from clean, consistent shapes. Nineteenth-century cursive breaks every one of those assumptions: letters connect into ligatures with no clear boundaries, ink fades unevenly across a page, slant and pressure vary letter to letter within the same word, and writers used period-specific abbreviations (`&` for "and," hyphenated line-endings, dropped punctuation) that no modern OCR training set has ever seen.
@@ -93,5 +97,5 @@ The current system supports three curated Gibson diary pages and eight Lincoln P
 
 ---
 
-*Full source code, setup instructions, and test suite: [GitHub link]*
-*Demo video: [YouTube link]*
+*Full source code, setup instructions, and test suite: [https://github.com/nofeartolove/archive_whisperer](https://github.com/nofeartolove/archive_whisperer)*
+*Demo video: [YouTube link — add once uploaded]*
