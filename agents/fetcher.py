@@ -164,7 +164,10 @@ def run_fetcher(url: str, retries: int = 4, delay: float = 10.0) -> dict:
                 print(f"[Fetcher] Success: {data.get('local_path')} ({data.get('size_bytes')} bytes)")
                 return data
             except Exception as e:
-                print(f"[Fetcher] Attempt {attempt + 1} of {retries} failed: {e}")
+                err_msg = str(e)
+                if len(err_msg) > 150:
+                    err_msg = err_msg[:150] + "..."
+                print(f"[Fetcher] Attempt {attempt + 1} of {retries} failed: {err_msg}")
                 if attempt < retries - 1:
                     print(f"[Fetcher] Waiting {delay} seconds before retrying...")
                     time.sleep(delay)

@@ -150,7 +150,10 @@ def run_formatter(text: str, metadata: dict, retries: int = 4, delay: float = 10
                 print(f"[Formatter] {save_result}")
                 break
             except Exception as e:
-                print(f"[Formatter] Attempt {attempt + 1} of {retries} failed: {e}")
+                err_msg = str(e)
+                if len(err_msg) > 150:
+                    err_msg = err_msg[:150] + "..."
+                print(f"[Formatter] Attempt {attempt + 1} of {retries} failed: {err_msg}")
                 if attempt < retries - 1:
                     print(f"[Formatter] Waiting {delay} seconds before retrying...")
                     time.sleep(delay)

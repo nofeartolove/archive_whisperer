@@ -79,7 +79,11 @@ def transcribe_image_file(image_path: str | pathlib.Path, retries: int = 4, dela
             return response_text
 
         except Exception as e:
-            print(f"[Transcriber] Attempt {attempt + 1} with {current_model} failed: {e}")
+            # Truncate raw exception output to keep stdout clean on screen
+            err_msg = str(e)
+            if len(err_msg) > 150:
+                err_msg = err_msg[:150] + "..."
+            print(f"[Transcriber] Attempt {attempt + 1} with {current_model} failed: {err_msg}")
             if attempt < retries - 1:
                 print(f"[Transcriber] Waiting {delay} seconds before retrying...")
                 time.sleep(delay)
