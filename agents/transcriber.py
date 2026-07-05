@@ -6,7 +6,6 @@ import os
 import pathlib
 import dotenv
 from google.adk.agents import LlmAgent
-from google.adk.runners import InMemoryRunner
 from google.genai import types
 
 # Load env variables (automatically walks up to find .env in project root)
@@ -20,60 +19,65 @@ if str(project_root) not in sys.path:
 
 from security.guards import load_skill_instruction
 
+# LlmAgent retained for ADK architecture documentation — transcribe_image_file
+# calls the Gemini API directly to avoid ADK InMemoryRunner empty-response instability.
 transcriber = LlmAgent(
     name="transcriber_agent",
     model="gemini-3.5-flash",
     instruction=load_skill_instruction("transcribe_image"),
 )
 
+
 def transcribe_image_file(image_path: str | pathlib.Path, retries: int = 4, delay: float = 10.0) -> str:
-    """Helper function to run the transcriber agent on an image file with fallback models on failure."""
+    """Transcribes a manuscript image using the Gemini vision API directly.
+
+    Calls google.genai.Client.models.generate_content() directly instead of
+    routing through ADK's InMemoryRunner, eliminating the 'model output must
+    contain either output text or tool calls' error that the ADK runner raises
+    when it loses the model's text response internally.
+    """
     import time
+    import google.genai as genai
+
     path = pathlib.Path(image_path)
     if not path.exists():
         raise FileNotFoundError(f"Image not found at {path}")
-        
+
     img_bytes = path.read_bytes()
-    
-    # Construct the multimodal message
-    message = types.Content(
-        role="user",
-        parts=[
-            types.Part.from_bytes(data=img_bytes, mime_type="image/jpeg"),
-            types.Part.from_text(text="Transcribe this manuscript.")
-        ]
-    )
-    
-    fallback_models = ["gemini-3.5-flash", "gemini-2.5-flash", "gemini-3.1-flash-lite", "gemini-2.5-flash-lite"]
-    
+
+    # Load the paleography instruction from the skill file
+    instruction = load_skill_instruction("transcribe_image")
+
+    fallback_models = [
+        "gemini-3.5-flash",
+        "gemini-2.5-flash",
+        "gemini-3.1-flash-lite",
+        "gemini-2.5-flash-lite",
+    ]
+
+    client = genai.Client()
+
     for attempt in range(retries):
         current_model = fallback_models[attempt % len(fallback_models)]
-        transcriber.model = current_model
-        
         try:
-            # Initialize in-memory runner
-            runner = InMemoryRunner(agent=transcriber)
-            
-            # Create a unique session ID per attempt
-            session_id = f"session_{path.stem}_{attempt}"
-            runner.session_service.create_session_sync(
-                app_name=runner.app_name,
-                user_id="default_user",
-                session_id=session_id
+            print(f"[Transcriber] Attempt {attempt + 1}: transcribing {path.name} with {current_model}")
+
+            response = client.models.generate_content(
+                model=current_model,
+                contents=[
+                    types.Part.from_bytes(data=img_bytes, mime_type="image/jpeg"),
+                    types.Part.from_text(text=f"{instruction}\n\nTranscribe this manuscript page exactly."),
+                ],
             )
-            
-            # Run the agent and extract the response text
-            response_text = ""
-            for event in runner.run(user_id="default_user", session_id=session_id, new_message=message):
-                if event.content and event.content.parts:
-                    for part in event.content.parts:
-                        if part.text:
-                            response_text += part.text
-                            
+
+            response_text = response.text if response.text else ""
+
             if not response_text.strip():
-                raise ValueError("Transcriber Agent returned empty response (possibly due to API 429).")
-                
+                raise ValueError(f"Transcriber got empty response from {current_model}.")
+
+            print(f"[Transcriber] Success: {len(response_text)} chars transcribed.")
             return response_text
+
         except Exception as e:
             print(f"[Transcriber] Attempt {attempt + 1} with {current_model} failed: {e}")
             if attempt < retries - 1:
@@ -82,22 +86,22 @@ def transcribe_image_file(image_path: str | pathlib.Path, retries: int = 4, dela
             else:
                 raise e
 
+
 if __name__ == "__main__":
     # Ensure output directory exists
     output_dir = pathlib.Path("output")
     output_dir.mkdir(exist_ok=True)
-    
+
     # Test on the 3 Gibson diary sample images
     gibson_pages = ["011", "037", "049"]
     for page in gibson_pages:
         img_name = f"gibson_page{page}.jpg"
         img_path = pathlib.Path("data/images") / img_name
-        
+
         print(f"\nTranscribing {img_name}...")
         try:
             transcript = transcribe_image_file(img_path)
-            
-            # Save the transcription output
+
             out_file = output_dir / f"transcription_page{page}.txt"
             out_file.write_text(transcript, encoding="utf-8")
             print(f"Saved transcript to {out_file}")
