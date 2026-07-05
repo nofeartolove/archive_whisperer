@@ -1,5 +1,7 @@
 # Archive Whisperer
 
+[![Docker Build Check](https://github.com/nofeartolove/archive_whisperer/actions/workflows/docker-build.yml/badge.svg)](https://github.com/nofeartolove/archive_whisperer/actions/workflows/docker-build.yml)
+
 Archive Whisperer is an enterprise-grade, highly resilient multi-agent paleography system for transcribing historical cursive manuscripts, built using the **Google Agent Development Kit (ADK)** and **FastMCP**.
 
 Verified reproducible from a fresh clone -- see [REPRODUCIBILITY.md](REPRODUCIBILITY.md) for the full verification log and a one-command script to check it yourself.
@@ -178,3 +180,24 @@ To verify that the Library of Congress JSON schema has not changed upstream, exe
 ```bash
 pytest -m live
 ```
+
+---
+
+## 9. Deployment
+
+Archive Whisperer is fully containerized and ready for deployment to any cloud provider or container host (such as AWS ECS, GCP Cloud Run, or Kubernetes).
+
+### Build the Image
+To build the self-contained Docker image locally:
+```bash
+docker build -t archive-whisperer .
+```
+This build is automatically verified on every push and pull request via the GitHub Actions CI pipeline (see the status badge at the top of the README or review the [workflow configuration](.github/workflows/docker-build.yml)).
+
+### Run the Container
+Run the pipeline tests inside the container, passing your API credentials via a local `.env` file:
+```bash
+docker run --env-file .env archive-whisperer
+```
+No API credentials are baked into the image, adhering to production security best practices. Live deployment to a public host endpoint is optional per the competition rules and was not required for this submission; containerization here demonstrates that the system is fully deployment-ready.
+

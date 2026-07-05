@@ -1,0 +1,12 @@
+.venv/
+__pycache__/
+.env
+output/
+data/images/*.jpg
+.git/
+.pytest_cache/
+tests/
+mcp_server/__pycache__/
+agents/__pycache__/
+security/__pycache__/
+scripts/__pycache__/

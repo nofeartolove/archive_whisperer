@@ -81,7 +81,7 @@ Character-level accuracy is consistently stronger than word-level accuracy, whic
 | Agent Skills | `skills/*/SKILL.md` — each agent's instruction set is loaded directly from its skill file at runtime, not duplicated in code |
 | Security features | `security/guards.py` — domain allowlisting, rate limiting, prompt-injection filtering, and an automated hardcoded-secret scanner in the test suite |
 | Antigravity | Demonstrated live in the submission video, running the full pipeline end-to-end inside Google's Antigravity environment |
-| Deployability | Setup, environment configuration, and reproducibility instructions included in the repository README and `REPRODUCIBILITY.md`, independently verified via a fresh-clone test |
+| Deployability | Containerized via a Dockerfile (README Section 9), with the build independently verified on every push via GitHub Actions CI -- no manual local build required to trust this claim. Setup and reproducibility are also verified via a fresh-clone test documented in REPRODUCIBILITY.md. |
 
 ### The Build
 
