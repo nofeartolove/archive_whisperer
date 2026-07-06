@@ -17,6 +17,24 @@ def print_banner(text: str):
     print(f"{BLUE}>>> {text}{RESET}")
     print(f"{BLUE}=================================================={RESET}")
 
+def find_git_executable() -> str:
+    # Try standard path lookup
+    git_path = shutil.which("git")
+    if git_path:
+        return git_path
+    
+    # Try common Windows installations
+    common_paths = [
+        "C:\\Program Files\\Git\\cmd\\git.exe",
+        "C:\\Program Files (x86)\\Git\\cmd\\git.exe",
+        os.path.expandvars("%USERPROFILE%\\AppData\\Local\\Programs\\Git\\cmd\\git.exe")
+    ]
+    for path in common_paths:
+        if os.path.exists(path):
+            return path
+            
+    return "git" # Fallback to standard command name
+
 def main():
     original_root = pathlib.Path(__file__).parent.parent.resolve()
     
@@ -36,17 +54,20 @@ def main():
     # 2. Simulate fresh clone by copying git-tracked files only
     print(f"\n{BLUE}Copying git-tracked files...{RESET}")
     try:
+        git_cmd = find_git_executable()
         git_files_raw = subprocess.check_output(
-            ["git", "ls-files"], cwd=str(original_root)
+            [git_cmd, "ls-files"], cwd=str(original_root)
         ).decode("utf-8").splitlines()
         
         for f in git_files_raw:
             src_file = original_root / f
+            if not src_file.exists():
+                continue
             dest_file = temp_dir / f
             os.makedirs(dest_file.parent, exist_ok=True)
             shutil.copy2(src_file, dest_file)
             
-        print(f"{GREEN}PASS: Successfully cloned {len(git_files_raw)} tracked files.{RESET}")
+        print(f"{GREEN}PASS: Successfully cloned tracked files.{RESET}")
     except Exception as e:
         print(f"{RED}FAIL: Failed to clone git-tracked files: {e}{RESET}")
         shutil.rmtree(temp_dir, ignore_errors=True)
@@ -55,7 +76,7 @@ def main():
     # 3. Create fresh virtual environment
     print_banner("1. CREATING VIRTUAL ENVIRONMENT")
     try:
-        subprocess.check_call([sys.executable, "-m", "venv", ".venv"], cwd=str(temp_dir))
+        subprocess.check_call([sys.executable, "-m", "venv", ".venv"], cwd=str(temp_dir), shell=(sys.platform == "win32"))
         print(f"{GREEN}PASS: Virtual environment created successfully.{RESET}")
     except Exception as e:
         print(f"{RED}FAIL: Failed to create virtual environment: {e}{RESET}")
@@ -73,7 +94,7 @@ def main():
     # 4. Install dependencies
     print_banner("2. INSTALLING DEPENDENCIES")
     try:
-        subprocess.check_call([str(venv_pip), "install", "-r", "requirements.txt"], cwd=str(temp_dir))
+        subprocess.check_call([str(venv_pip), "install", "-r", "requirements.txt"], cwd=str(temp_dir), shell=(sys.platform == "win32"))
         print(f"{GREEN}PASS: Dependencies installed successfully.{RESET}")
     except Exception as e:
         print(f"{RED}FAIL: Dependency installation failed: {e}{RESET}")
@@ -84,7 +105,7 @@ def main():
     print_banner("3. RUNNING OFFLINE TEST SUITE (pytest)")
     try:
         # Run pytest offline
-        subprocess.check_call([str(venv_python), "-m", "pytest"], cwd=str(temp_dir))
+        subprocess.check_call([str(venv_python), "-m", "pytest"], cwd=str(temp_dir), shell=(sys.platform == "win32"))
         print(f"{GREEN}PASS: Test suite completed with zero failures (offline mode).{RESET}")
     except Exception as e:
         print(f"{RED}FAIL: Test suite failed or raised errors: {e}{RESET}")
@@ -129,7 +150,7 @@ if __name__ == "__main__":
                 new_content = "\n".join(lines[:main_idx]) + "\n" + page_11_only_block
                 test_run_script.write_text(new_content, encoding="utf-8")
             
-            subprocess.check_call([str(venv_python), "scripts/run_pipeline_test.py"], cwd=str(temp_dir))
+            subprocess.check_call([str(venv_python), "scripts/run_pipeline_test.py"], cwd=str(temp_dir), shell=(sys.platform == "win32"))
             print(f"{GREEN}PASS: Live pipeline completed successfully on Gibson Page 11.{RESET}")
         except Exception as e:
             print(f"{RED}FAIL: Live pipeline run failed: {e}{RESET}")
